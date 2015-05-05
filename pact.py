@@ -18,16 +18,49 @@ class NonPactLine(List):
     grammar = re.compile('.+'), '\n'
 
 
-class Attribute(object):
-    grammar = name(), '=', '{twitter_share}'
+class Attribute(List):
+    grammar = name(), '=', re.compile(r'[^>]+')
 
 
 class Attributes(List):
     grammar = maybe_some(Attribute)
 
 
+class TagOpen(object):
+    grammar = '<'
+
+
+class TagClose(object):
+    grammar = '>'
+
+
+class TagAttributes(List):
+    grammar = Attributes
+
+
+class TagName(object):
+    grammar = name()
+
+
 class Tag(List):
-    grammar = '<', name(), whitespace, Attributes, '>'
+
+    @staticmethod
+    def parse(parser, text, pos):
+        try:
+            text, result = parser.parse(text, '<')
+            text, tag = parser.parse(text, TagName)
+            text, result = parser.parse(text, whitespace)
+            text, result = parser.parse(text, TagAttributes)
+            text, result = parser.parse(text, '>')
+            text, result = parser.parse(text, maybe_some(Tag))
+            text, result = parser.parse(text, '</')
+            text, result = parser.parse(text, tag.name)
+            text, result = parser.parse(text, '>')
+        except SyntaxError, e:
+            print('Caught', e, text)
+            return text, e
+
+        return text, result
 
 
 class PactBlock(List):
