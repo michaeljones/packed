@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function
 
 import re
 
-from pypeg2 import parse, List, word, name, endl, restline, maybe_some, optional, some
+from pypeg2 import parse, compose, List, word, name, endl, restline, maybe_some, optional, some
 
 whitespace = re.compile(r'\s+')
 
@@ -15,8 +15,14 @@ class Function(List):
 
 
 class NonPactLine(List):
-    grammar = re.compile('.+'), '\n'
+    grammar = re.compile('.*'), '\n'
 
+    def compose(self, parser, attr_of=None):
+        text = []
+        for entry in self:
+            text.append(entry)
+
+        return '\n'.join(text)
 
 class Attribute(List):
     grammar = name(), '=', re.compile(r'[^>]+')
@@ -41,38 +47,81 @@ class TagAttributes(List):
 class TagName(object):
     grammar = name()
 
+    def compose(self, parser, attr_of=None):
+        return self.name
+
 
 class Tag(List):
 
     @staticmethod
     def parse(parser, text, pos):
+        result = Tag()
         try:
-            text, result = parser.parse(text, '<')
+            text, _ = parser.parse(text, '<')
             text, tag = parser.parse(text, TagName)
-            text, result = parser.parse(text, whitespace)
-            text, result = parser.parse(text, TagAttributes)
-            text, result = parser.parse(text, '>')
-            text, result = parser.parse(text, maybe_some(Tag))
-            text, result = parser.parse(text, '</')
-            text, result = parser.parse(text, tag.name)
-            text, result = parser.parse(text, '>')
+            result.append(tag)
+            text, _ = parser.parse(text, whitespace)
+            text, _ = parser.parse(text, TagAttributes)
+            text, _ = parser.parse(text, '>')
+            text, children = parser.parse(text, TagChildren)
+            result.append(children)
+            text, _ = parser.parse(text, '</')
+            text, _ = parser.parse(text, tag.name)
+            text, _ = parser.parse(text, '>')
         except SyntaxError, e:
             print('Caught', e, text)
             return text, e
 
         return text, result
 
+    def compose(self, parser, attr_of=None):
+        text = []
+        for entry in self:
+            if isinstance(entry, basestring):
+                text.append(entry)
+            else:
+                text.append(entry.compose(parser))
+
+        return '\n'.join(text)
+
+
+class TagChildren(List):
+    grammar = maybe_some(Tag)
+
+    def compose(self, parser, attr_of=None):
+        text = []
+        for entry in self:
+            text.append(entry.compose(parser))
+
+        return '\n'.join(text)
+
 
 class PactBlock(List):
     grammar = re.compile(r'[^<\n]+'), Tag
 
+    def compose(self, parser, attr_of=None):
+        text = []
+        for entry in self:
+            if isinstance(entry, basestring):
+                text.append(entry)
+            else:
+                text.append(entry.compose(parser))
+
+        return '\n'.join(text)
+
 
 class File(List):
     grammar = maybe_some([
-        '\n',
         PactBlock,
         NonPactLine,
     ])
+
+    def compose(self, parser, attr_of=None):
+        text = []
+        for entry in self:
+            text.append(entry.compose(parser))
+
+        return '\n'.join(text)
 
 
 text = u"""
@@ -82,9 +131,11 @@ def tag(self):
 """
 
 import pdb
-# pdb.set_trace()
 result = parse(text, File, whitespace=None)
 
 for entry in result:
     print(entry)
 
+
+# pdb.set_trace()
+print(compose(result))
