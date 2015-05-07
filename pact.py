@@ -47,9 +47,6 @@ class TagAttributes(List):
 class TagName(object):
     grammar = name()
 
-    def compose(self, parser, attr_of=None):
-        return self.name
-
 
 class Tag(List):
 
@@ -59,7 +56,7 @@ class Tag(List):
         try:
             text, _ = parser.parse(text, '<')
             text, tag = parser.parse(text, TagName)
-            result.append(tag)
+            result.name = tag.name
             text, _ = parser.parse(text, whitespace)
             text, _ = parser.parse(text, TagAttributes)
             text, _ = parser.parse(text, '>')
@@ -74,24 +71,35 @@ class Tag(List):
 
         return text, result
 
-    def compose(self, parser, attr_of=None):
+    def compose(self, parser, indent=0, first=False):
         text = []
-        for entry in self:
-            if isinstance(entry, basestring):
-                text.append(entry)
-            else:
-                text.append(entry.compose(parser))
 
-        return '\n'.join(text)
+        indent_str = indent * int(not first) * "    "
+        end_indent_str = indent * "    "
+        indent_plus_str = (indent + 1) * "    "
+
+        text.append(
+            "{indent}Elem(\n{indent_plus}'{name}'{sep}".format(**{
+                'indent': indent_str,
+                'indent_plus': indent_plus_str,
+                'name': self.name,
+                'sep': len(self) * ',\n'
+            })
+        )
+        for entry in self:
+            text.append(entry.compose(parser, indent=indent+1))
+        text.append("{indent})\n".format(indent=end_indent_str))
+
+        return ''.join(text)
 
 
 class TagChildren(List):
     grammar = maybe_some(Tag)
 
-    def compose(self, parser, attr_of=None):
+    def compose(self, parser, indent=0):
         text = []
         for entry in self:
-            text.append(entry.compose(parser))
+            text.append(entry.compose(parser, indent=indent))
 
         return '\n'.join(text)
 
@@ -105,9 +113,9 @@ class PactBlock(List):
             if isinstance(entry, basestring):
                 text.append(entry)
             else:
-                text.append(entry.compose(parser))
+                text.append(entry.compose(parser, indent=1, first=True))
 
-        return '\n'.join(text)
+        return ''.join(text)
 
 
 class File(List):
