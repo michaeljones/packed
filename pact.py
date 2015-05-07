@@ -5,13 +5,8 @@ import re
 
 from pypeg2 import parse, compose, List, word, name, endl, restline, maybe_some, optional, some
 
+
 whitespace = re.compile(r'\s+')
-
-class Import(List):
-    grammar = 'import', name()
-
-class Function(List):
-    grammar = 'def', some(re.compile('(?s).+'))
 
 
 class NonPactLine(List):
@@ -66,7 +61,6 @@ class Tag(List):
             text, _ = parser.parse(text, tag.name)
             text, _ = parser.parse(text, '>')
         except SyntaxError, e:
-            print('Caught', e, text)
             return text, e
 
         return text, result
@@ -132,18 +126,6 @@ class File(List):
         return '\n'.join(text)
 
 
-text = u"""
-def tag(self):
-    twitter_share = ""
-    return <a href={twitter_share}><i class="fa fa-twitter-square large-icon"></i></a>
-"""
-
-import pdb
-result = parse(text, File, whitespace=None)
-
-for entry in result:
-    print(entry)
-
-
-# pdb.set_trace()
-print(compose(result))
+def translate(code):
+    result = parse(code, File, whitespace=None)
+    return compose(result)
