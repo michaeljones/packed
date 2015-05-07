@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function
 
 import re
 
-from pypeg2 import parse, compose, List, word, name, endl, restline, maybe_some, optional, some
+from pypeg2 import parse, compose, List, word, name, endl, restline, maybe_some, optional, some, attr
 
 
 whitespace = re.compile(r'\s+')
@@ -19,31 +19,42 @@ class NonPactLine(List):
 
         return '\n'.join(text)
 
-class Attribute(List):
-    grammar = name(), '=', re.compile(r'[^>]+')
+
+class String(object):
+    grammar = '"', attr('value', re.compile(r'[^"]*')), '"'
+
+    def compose(self, parser):
+        return '"%s"' % self.value
+
+
+class InlineCode(object):
+    grammar = '{', attr('code', re.compile(r'[^}]*')), '}'
+
+    def compose(self, parser):
+        return self.code
+
+
+class Attribute(object):
+    grammar = name(), '=', attr('value', [String, InlineCode])
+
+    def compose(self, parser, indent=0):
+        indent_str = indent * "    "
+        return "{indent}'{name}': {value},".format(
+            indent=indent_str,
+            name=self.name,
+            value=self.value.compose(parser)
+        )
 
 
 class Attributes(List):
     grammar = maybe_some(Attribute)
 
 
-class TagOpen(object):
-    grammar = '<'
-
-
-class TagClose(object):
-    grammar = '>'
-
-
-class TagAttributes(List):
-    grammar = Attributes
-
-
 class TagName(object):
     grammar = name()
 
 
-class Tag(List):
+class Tag(object):
 
     @staticmethod
     def parse(parser, text, pos):
@@ -53,10 +64,11 @@ class Tag(List):
             text, tag = parser.parse(text, TagName)
             result.name = tag.name
             text, _ = parser.parse(text, whitespace)
-            text, _ = parser.parse(text, TagAttributes)
+            text, attributes = parser.parse(text, Attributes)
+            result.attributes = attributes[:]
             text, _ = parser.parse(text, '>')
             text, children = parser.parse(text, TagChildren)
-            result.append(children)
+            result.children = children[:]
             text, _ = parser.parse(text, '</')
             text, _ = parser.parse(text, tag.name)
             text, _ = parser.parse(text, '>')
@@ -77,10 +89,15 @@ class Tag(List):
                 'indent': indent_str,
                 'indent_plus': indent_plus_str,
                 'name': self.name,
-                'sep': len(self) * ',\n'
+                'sep': int(bool((len(self.children) + len(self.attributes)))) * ',\n'
             })
         )
-        for entry in self:
+        text.append('{indent_plus}{{\n'.format(indent_plus=indent_plus_str))
+        for attribute in self.attributes:
+            text.append(attribute.compose(parser, indent + 2))
+            text.append('\n')
+        text.append('{indent_plus}}},\n'.format(indent_plus=indent_plus_str))
+        for entry in self.children:
             text.append(entry.compose(parser, indent=indent+1))
         text.append("{indent})\n".format(indent=end_indent_str))
 
