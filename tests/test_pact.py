@@ -1,7 +1,7 @@
 
 from unittest import TestCase
 
-from pact import translate
+from pact import translate, Elem
 
 
 
@@ -38,3 +38,14 @@ def tag(self):
         result = translate(code)
 
         self.assertMultiLineEqual(expected, result)
+
+
+class TestElem(TestCase):
+
+    def test_elem(self):
+
+        elem = Elem('a', {}, [])
+
+        expected = "<a>"
+
+        self.assertEqual(elem.to_html(), expected)

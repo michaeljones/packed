@@ -146,3 +146,16 @@ class File(List):
 def translate(code):
     result = parse(code, File, whitespace=None)
     return compose(result)
+
+
+
+class Elem(object):
+
+    def __init__(self, name, attributes, children=None):
+
+        self.name = name
+        self.attributes = attributes
+        self.children = children or []
+
+    def to_html(self):
+        return "<%s>" % self.name
