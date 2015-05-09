@@ -158,4 +158,11 @@ class Elem(object):
         self.children = children or []
 
     def to_html(self):
-        return "<%s>" % self.name
+        if self.children:
+            children_text = ''.join(map(lambda c: c.to_html(), self.children))
+            return "<{name}>{children}</{name}>".format(
+                name=self.name,
+                children=children_text
+            )
+        else:
+            return "<%s />" % self.name

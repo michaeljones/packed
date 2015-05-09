@@ -42,10 +42,18 @@ def tag(self):
 
 class TestElem(TestCase):
 
-    def test_elem(self):
+    def test_empty_elem(self):
 
         elem = Elem('a', {}, [])
 
-        expected = "<a>"
+        expected = "<a />"
+
+        self.assertEqual(elem.to_html(), expected)
+
+    def test_elem(self):
+
+        elem = Elem('a', {}, [Elem('b', {}, [])])
+
+        expected = "<a><b /></a>"
 
         self.assertEqual(elem.to_html(), expected)
