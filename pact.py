@@ -192,6 +192,10 @@ def translate(code):
     return compose(result)
 
 
+def format_attribute(key, value):
+    return '{name}="{value}"'.format(name=key, value=value)
+
+
 class Elem(object):
 
     def __init__(self, name, attributes, children=None):
@@ -201,10 +205,21 @@ class Elem(object):
         self.children = children or []
 
     def to_html(self):
+        attribute_text = ' '.join(
+            map(
+                lambda item: format_attribute(item[0], item[1]),
+                self.attributes.iteritems()
+            )
+        )
+
+        if attribute_text:
+            attribute_text = ' ' + attribute_text
+
         if self.children:
             children_text = ''.join(map(lambda c: c.to_html(), self.children))
-            return "<{name}>{children}</{name}>".format(
+            return "<{name}{attributes}>{children}</{name}>".format(
                 name=self.name,
+                attributes=attribute_text,
                 children=children_text
             )
         else:
