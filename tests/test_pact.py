@@ -4,7 +4,6 @@ from unittest import TestCase
 from pact import translate, Elem
 
 
-
 class TestTranslate(TestCase):
 
     def test_translate(self):
@@ -39,7 +38,6 @@ def tag(self):
 
         self.assertMultiLineEqual(expected, result)
 
-
     def test_empty_tag_translate(self):
 
         code = """
@@ -71,7 +69,6 @@ def tag(self):
         result = translate(code)
 
         self.assertMultiLineEqual(expected, result)
-
 
 
 class TestElem(TestCase):
