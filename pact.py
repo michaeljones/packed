@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function
 
 import re
 
-from pypeg2 import parse, compose, List, word, name, endl, restline, maybe_some, optional, some, attr
+from pypeg2 import parse, compose, List, name, maybe_some, attr
 
 
 whitespace = re.compile(r'\s+')
@@ -54,11 +54,55 @@ class TagName(object):
     grammar = name()
 
 
-class Tag(object):
+class EmptyTag(object):
 
     @staticmethod
     def parse(parser, text, pos):
-        result = Tag()
+        result = EmptyTag()
+        try:
+            text, _ = parser.parse(text, '<')
+            text, tag = parser.parse(text, TagName)
+            result.name = tag.name
+            text, _ = parser.parse(text, whitespace)
+            text, attributes = parser.parse(text, Attributes)
+            result.attributes = attributes[:]
+            text, _ = parser.parse(text, whitespace)
+            text, _ = parser.parse(text, '/>')
+        except SyntaxError, e:
+            return text, e
+
+        return text, result
+
+    def compose(self, parser, indent=0, first=False):
+        text = []
+
+        indent_str = indent * int(not first) * "    "
+        end_indent_str = indent * "    "
+        indent_plus_str = (indent + 1) * "    "
+
+        text.append(
+            "{indent}Elem(\n{indent_plus}'{name}'{sep}".format(**{
+                'indent': indent_str,
+                'indent_plus': indent_plus_str,
+                'name': self.name,
+                'sep': int(bool(len(self.attributes))) * ',\n'
+            })
+        )
+        text.append('{indent_plus}{{\n'.format(indent_plus=indent_plus_str))
+        for attribute in self.attributes:
+            text.append(attribute.compose(parser, indent + 2))
+            text.append('\n')
+        text.append('{indent_plus}}},\n'.format(indent_plus=indent_plus_str))
+        text.append("{indent})\n".format(indent=end_indent_str))
+
+        return ''.join(text)
+
+
+class NonEmptyTag(object):
+
+    @staticmethod
+    def parse(parser, text, pos):
+        result = NonEmptyTag()
         try:
             text, _ = parser.parse(text, '<')
             text, tag = parser.parse(text, TagName)
@@ -105,7 +149,7 @@ class Tag(object):
 
 
 class TagChildren(List):
-    grammar = maybe_some(Tag)
+    grammar = maybe_some([EmptyTag, NonEmptyTag])
 
     def compose(self, parser, indent=0):
         text = []
@@ -116,7 +160,7 @@ class TagChildren(List):
 
 
 class PactBlock(List):
-    grammar = re.compile(r'[^<\n]+'), Tag
+    grammar = re.compile(r'[^<\n]+'), [NonEmptyTag, EmptyTag]
 
     def compose(self, parser, attr_of=None):
         text = []
@@ -146,7 +190,6 @@ class File(List):
 def translate(code):
     result = parse(code, File, whitespace=None)
     return compose(result)
-
 
 
 class Elem(object):

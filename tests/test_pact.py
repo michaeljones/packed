@@ -40,6 +40,40 @@ def tag(self):
         self.assertMultiLineEqual(expected, result)
 
 
+    def test_empty_tag_translate(self):
+
+        code = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return <a href={twitter_share}><i class="fa fa-twitter-square large-icon" /></a>
+"""
+
+        expected = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return Elem(
+        'a',
+        {
+            'href': twitter_share,
+        },
+        Elem(
+            'i',
+            {
+                'class': "fa fa-twitter-square large-icon",
+            },
+        )
+    )
+
+"""
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
+
+
 class TestElem(TestCase):
 
     def test_empty_elem(self):
