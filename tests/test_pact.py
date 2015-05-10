@@ -6,7 +6,7 @@ from pact import translate, Elem
 
 class TestTranslate(TestCase):
 
-    def test_translate(self):
+    def test_single_child(self):
 
         code = """
 @pact
@@ -29,7 +29,7 @@ def tag(self):
             {
                 'class': "fa fa-twitter-square large-icon",
             },
-        )
+        ),
     )
 
 """
@@ -37,6 +37,48 @@ def tag(self):
         result = translate(code)
 
         self.assertMultiLineEqual(expected, result)
+
+    def test_multiple_children(self):
+
+        code = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return <a href={twitter_share}>
+            <i class="fa fa-twitter-square large-icon"></i>
+            <i class="fa fa-facebook-square large-icon"></i>
+        </a>
+"""
+
+        expected = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return Elem(
+        'a',
+        {
+            'href': twitter_share,
+        },
+        Elem(
+            'i',
+            {
+                'class': "fa fa-twitter-square large-icon",
+            },
+        ),
+        Elem(
+            'i',
+            {
+                'class': "fa fa-facebook-square large-icon",
+            },
+        ),
+    )
+
+"""
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
 
     def test_empty_tag_translate(self):
 

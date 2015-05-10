@@ -111,8 +111,10 @@ class NonEmptyTag(object):
             text, attributes = parser.parse(text, Attributes)
             result.attributes = attributes[:]
             text, _ = parser.parse(text, '>')
+            text, _ = parser.parse(text, maybe_some(whitespace))
             text, children = parser.parse(text, TagChildren)
             result.children = children[:]
+            text, _ = parser.parse(text, maybe_some(whitespace))
             text, _ = parser.parse(text, '</')
             text, _ = parser.parse(text, tag.name)
             text, _ = parser.parse(text, '>')
@@ -129,32 +131,42 @@ class NonEmptyTag(object):
         indent_plus_str = (indent + 1) * "    "
 
         text.append(
-            "{indent}Elem(\n{indent_plus}'{name}'{sep}".format(**{
-                'indent': indent_str,
-                'indent_plus': indent_plus_str,
-                'name': self.name,
-                'sep': int(bool((len(self.children) + len(self.attributes)))) * ',\n'
-            })
+            "{indent}Elem(\n{indent_plus}'{name}'{sep}".format(
+                indent=indent_str,
+                indent_plus=indent_plus_str,
+                name=self.name,
+                sep=int(bool((len(self.children) + len(self.attributes)))) * ',\n'
+            )
         )
         text.append('{indent_plus}{{\n'.format(indent_plus=indent_plus_str))
         for attribute in self.attributes:
-            text.append(attribute.compose(parser, indent + 2))
+            text.append(attribute.compose(parser, indent=indent+2))
             text.append('\n')
         text.append('{indent_plus}}},\n'.format(indent_plus=indent_plus_str))
         for entry in self.children:
-            text.append(entry.compose(parser, indent=indent+1))
-        text.append("{indent})\n".format(indent=end_indent_str))
+            # Skip whitespace for the moment - TODO Probably can't do this all the time
+            if not isinstance(entry, basestring):
+                text.append(entry.compose(parser, indent=indent+1))
+        text.append(
+            "{indent}){sep}\n".format(
+                indent=end_indent_str,
+                sep=int(not first) * ','
+                )
+            )
 
         return ''.join(text)
 
 
 class TagChildren(List):
-    grammar = maybe_some([EmptyTag, NonEmptyTag])
+    grammar = maybe_some([EmptyTag, NonEmptyTag, whitespace])
 
     def compose(self, parser, indent=0):
         text = []
         for entry in self:
-            text.append(entry.compose(parser, indent=indent))
+            if isinstance(entry, basestring):
+                text.append(entry)
+            else:
+                text.append(entry.compose(parser, indent=indent))
 
         return '\n'.join(text)
 
