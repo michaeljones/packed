@@ -1,5 +1,6 @@
 
 
 test:
-	flake8 .
+	flake8 --select=F .
 	python -m unittest discover
+	flake8 .
