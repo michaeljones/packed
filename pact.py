@@ -7,13 +7,25 @@ from pypeg2 import parse, compose, List, name, maybe_some, attr
 
 
 whitespace = re.compile(r'\s+')
+text = re.compile(r'[^<]+')
+
+
+class Text(object):
+    grammar = attr('value', re.compile(r'[^<]+'))
+
+    def compose(self, parser, indent=0):
+        indent_str = indent * "    "
+        return "{indent}'{value}'\n".format(
+            indent=indent_str,
+            value=self.value
+        )
 
 
 class String(object):
     grammar = '"', attr('value', re.compile(r'[^"]*')), '"'
 
     def compose(self, parser):
-        return '"%s"' % self.value
+        return "'%s'" % self.value
 
 
 class InlineCode(object):
@@ -147,7 +159,7 @@ class NonEmptyTag(object):
 
 
 class TagChildren(List):
-    grammar = maybe_some([EmptyTag, NonEmptyTag, whitespace])
+    grammar = maybe_some([EmptyTag, NonEmptyTag, whitespace, Text])
 
     def compose(self, parser, indent=0):
         text = []

@@ -29,7 +29,7 @@ def tag(self):
         Elem(
             'i',
             {
-                'class': "fa fa-twitter-square large-icon",
+                'class': 'fa fa-twitter-square large-icon',
             },
         ),
     )
@@ -64,13 +64,13 @@ def tag(self):
         Elem(
             'i',
             {
-                'class': "fa fa-twitter-square large-icon",
+                'class': 'fa fa-twitter-square large-icon',
             },
         ),
         Elem(
             'i',
             {
-                'class': "fa fa-facebook-square large-icon",
+                'class': 'fa fa-facebook-square large-icon',
             },
         ),
     )
@@ -80,7 +80,6 @@ def tag(self):
         result = translate(code)
 
         self.assertMultiLineEqual(expected, result)
-
 
     def test_empty_tag_translate(self):
 
@@ -103,7 +102,7 @@ def tag(self):
         Elem(
             'i',
             {
-                'class': "fa fa-twitter-square large-icon",
+                'class': 'fa fa-twitter-square large-icon',
             },
         )
     )
@@ -139,6 +138,33 @@ def tag(self):
 
         expected = code
         result = translate(code)
+        self.assertMultiLineEqual(expected, result)
+
+    def test_text_in_tag(self):
+
+        code = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return <a href={twitter_share}>My link text</a>
+"""
+
+        expected = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return Elem(
+        'a',
+        {
+            'href': twitter_share,
+        },
+        'My link text'
+    )
+
+"""
+
+        result = translate(code)
+
         self.assertMultiLineEqual(expected, result)
 
 
