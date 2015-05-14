@@ -201,3 +201,11 @@ class TestElem(TestCase):
         expected = '<a data-width="800" class="some-icon"><b /></a>'
 
         self.assertEqual(elem.to_html(), expected)
+
+    def test_elem_with_text_child(self):
+
+        elem = Elem('a', {}, 'My link text')
+
+        expected = "<a>My link text</a>"
+
+        self.assertEqual(elem.to_html(), expected)

@@ -216,6 +216,15 @@ def format_attribute(key, value):
     return '{name}="{value}"'.format(name=key, value=value)
 
 
+def to_html(entity):
+
+    if hasattr(entity, 'to_html'):
+        return entity.to_html()
+    else:
+        # Assume unicode string or compatible
+        return unicode(entity)
+
+
 class Elem(object):
 
     def __init__(self, name, attributes, children=None):
@@ -225,6 +234,7 @@ class Elem(object):
         self.children = children or []
 
     def to_html(self):
+
         attribute_text = ' '.join(
             map(
                 lambda item: format_attribute(item[0], item[1]),
@@ -236,7 +246,7 @@ class Elem(object):
             attribute_text = ' ' + attribute_text
 
         if self.children:
-            children_text = ''.join(map(lambda c: c.to_html(), self.children))
+            children_text = ''.join(map(lambda c: to_html(c), self.children))
             return "<{name}{attributes}>{children}</{name}>".format(
                 name=self.name,
                 attributes=attribute_text,
