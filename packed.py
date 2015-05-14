@@ -6,6 +6,9 @@ import re
 from pypeg2 import parse, compose, List, name, maybe_some, attr, optional, some
 
 
+__version__ = '0.1.0'
+
+
 whitespace = re.compile(r'\s+')
 text = re.compile(r'[^<]+')
 
