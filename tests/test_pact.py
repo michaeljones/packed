@@ -8,6 +8,71 @@ from pact import translate, Elem
 
 class TestTranslate(TestCase):
 
+    def test_simple_element(self):
+
+        code = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return <a></a>
+"""
+
+        expected = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return Elem('a')
+"""
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
+    def test_empty_element(self):
+
+        code = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return <a />
+"""
+
+        expected = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return Elem('a')
+"""
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
+    def test_single_child_no_attributes(self):
+
+        code = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return <a><i></i></a>
+"""
+
+        expected = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return Elem(
+        'a',
+        {},
+        Elem('i'),
+    )
+
+"""
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
     def test_single_child(self):
 
         code = """

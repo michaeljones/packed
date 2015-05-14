@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function
 
 import re
 
-from pypeg2 import parse, compose, List, name, maybe_some, attr
+from pypeg2 import parse, compose, List, name, maybe_some, attr, optional, some
 
 
 whitespace = re.compile(r'\s+')
@@ -48,7 +48,24 @@ class Attribute(object):
 
 
 class Attributes(List):
-    grammar = maybe_some(Attribute)
+    grammar = optional(whitespace, some(Attribute))
+
+    def compose(self, parser, followed_by_children, indent):
+        indent_str = indent * "    "
+
+        if not len(self):
+            indented_paren = '{indent}{{}},\n'.format(indent=indent_str)
+            return indented_paren if followed_by_children else ''
+
+        text = []
+        text.append('{indent}{{\n'.format(indent=indent_str))
+        for entry in self:
+            if not isinstance(entry, basestring):
+                text.append(entry.compose(parser, indent=indent+1))
+                text.append('\n')
+        text.append('{indent}}},\n'.format(indent=indent_str))
+
+        return ''.join(text)
 
 
 class TagName(object):
@@ -64,9 +81,8 @@ class EmptyTag(object):
             text, _ = parser.parse(text, '<')
             text, tag = parser.parse(text, TagName)
             result.name = tag.name
-            text, _ = parser.parse(text, whitespace)
             text, attributes = parser.parse(text, Attributes)
-            result.attributes = attributes[:]
+            result.attributes = attributes
             text, _ = parser.parse(text, whitespace)
             text, _ = parser.parse(text, '/>')
         except SyntaxError, e:
@@ -81,20 +97,26 @@ class EmptyTag(object):
         end_indent_str = indent * "    "
         indent_plus_str = (indent + 1) * "    "
 
+        has_contents = bool(self.attributes)
+        paren_sep = '\n' if has_contents else ''
+        contents_sep = ',\n' if has_contents else ''
+
         text.append(
-            "{indent}Elem(\n{indent_plus}'{name}'{sep}".format(**{
-                'indent': indent_str,
-                'indent_plus': indent_plus_str,
-                'name': self.name,
-                'sep': int(bool(len(self.attributes))) * ',\n'
-            })
+            "{indent}Elem({paren_sep}{indent_plus}'{name}'{contents_sep}".format(
+                indent=indent_str,
+                indent_plus=indent_plus_str if has_contents else '',
+                name=self.name,
+                paren_sep=paren_sep,
+                contents_sep=contents_sep,
+            )
         )
-        text.append('{indent_plus}{{\n'.format(indent_plus=indent_plus_str))
-        for attribute in self.attributes:
-            text.append(attribute.compose(parser, indent + 2))
-            text.append('\n')
-        text.append('{indent_plus}}},\n'.format(indent_plus=indent_plus_str))
-        text.append("{indent})\n".format(indent=end_indent_str))
+        text.append(self.attributes.compose(parser, followed_by_children=False, indent=indent+1))
+        text.append(
+            "{indent}){newline}".format(
+                indent=end_indent_str if has_contents else '',
+                newline='\n' if has_contents else '',
+            )
+        )
 
         return ''.join(text)
 
@@ -108,9 +130,8 @@ class NonEmptyTag(object):
             text, _ = parser.parse(text, '<')
             text, tag = parser.parse(text, TagName)
             result.name = tag.name
-            text, _ = parser.parse(text, whitespace)
             text, attributes = parser.parse(text, Attributes)
-            result.attributes = attributes[:]
+            result.attributes = attributes
             text, _ = parser.parse(text, '>')
             text, _ = parser.parse(text, maybe_some(whitespace))
             text, children = parser.parse(text, TagChildren)
@@ -131,27 +152,33 @@ class NonEmptyTag(object):
         end_indent_str = indent * "    "
         indent_plus_str = (indent + 1) * "    "
 
+        has_children = bool(self.children)
+        has_attributes = bool(self.attributes)
+        has_contents = has_children or has_attributes
+        paren_sep = '\n' if has_contents else ''
+        contents_sep = ',\n' if has_contents else ''
+
         text.append(
-            "{indent}Elem(\n{indent_plus}'{name}'{sep}".format(
+            "{indent}Elem({paren_sep}{indent_plus}'{name}'{contents_sep}".format(
                 indent=indent_str,
-                indent_plus=indent_plus_str,
+                indent_plus=indent_plus_str if has_contents else '',
                 name=self.name,
-                sep=int(bool((len(self.children) + len(self.attributes)))) * ',\n'
+                paren_sep=paren_sep,
+                contents_sep=contents_sep
             )
         )
-        text.append('{indent_plus}{{\n'.format(indent_plus=indent_plus_str))
-        for attribute in self.attributes:
-            text.append(attribute.compose(parser, indent=indent+2))
-            text.append('\n')
-        text.append('{indent_plus}}},\n'.format(indent_plus=indent_plus_str))
+        text.append(
+            self.attributes.compose(parser, followed_by_children=has_children, indent=indent+1)
+        )
         for entry in self.children:
             # Skip whitespace for the moment - TODO Probably can't do this all the time
             if not isinstance(entry, basestring):
                 text.append(entry.compose(parser, indent=indent+1))
         text.append(
-            "{indent}){sep}\n".format(
-                indent=end_indent_str,
-                sep=int(not first) * ','
+            "{indent}){comma}{newline}".format(
+                indent=end_indent_str if has_contents else '',
+                comma='' if first else ',',
+                newline='\n' if (has_contents or not first) else '',
                 )
             )
 
