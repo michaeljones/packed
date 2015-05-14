@@ -254,11 +254,11 @@ def to_html(entity):
 
 class Elem(object):
 
-    def __init__(self, name, attributes, children=None):
+    def __init__(self, name, attributes=None, *children):
 
         self.name = name
-        self.attributes = attributes
-        self.children = children or []
+        self.attributes = attributes or {}
+        self.children = children
 
     def to_html(self):
 

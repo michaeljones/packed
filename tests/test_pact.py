@@ -237,7 +237,7 @@ class TestElem(TestCase):
 
     def test_empty_elem(self):
 
-        elem = Elem('a', {}, [])
+        elem = Elem('a')
 
         expected = "<a />"
 
@@ -245,7 +245,7 @@ class TestElem(TestCase):
 
     def test_elem(self):
 
-        elem = Elem('a', {}, [Elem('b', {}, [])])
+        elem = Elem('a', {}, Elem('b', {}))
 
         expected = "<a><b /></a>"
 
@@ -253,7 +253,7 @@ class TestElem(TestCase):
 
     def test_empty_elem_single_attribute(self):
 
-        elem = Elem('a', {'class': 'some-icon'}, [])
+        elem = Elem('a', {'class': 'some-icon'})
 
         expected = '<a class="some-icon" />'
 
@@ -261,7 +261,7 @@ class TestElem(TestCase):
 
     def test_elem_single_attribute(self):
 
-        elem = Elem('a', {'class': 'some-icon'}, [Elem('b', {}, [])])
+        elem = Elem('a', {'class': 'some-icon'}, Elem('b', {}))
 
         expected = '<a class="some-icon"><b /></a>'
 
@@ -269,7 +269,7 @@ class TestElem(TestCase):
 
     def test_elem_multiple_attribute(self):
 
-        elem = Elem('a', {'class': 'some-icon', 'data-width': 800}, [Elem('b', {}, [])])
+        elem = Elem('a', {'class': 'some-icon', 'data-width': 800}, Elem('b', {}))
 
         expected = '<a data-width="800" class="some-icon"><b /></a>'
 
