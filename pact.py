@@ -253,4 +253,7 @@ class Elem(object):
                 children=children_text
             )
         else:
-            return "<%s />" % self.name
+            return "<{name}{attributes} />".format(
+                name=self.name,
+                attributes=attribute_text
+            )

@@ -186,6 +186,14 @@ class TestElem(TestCase):
 
         self.assertEqual(elem.to_html(), expected)
 
+    def test_empty_elem_single_attribute(self):
+
+        elem = Elem('a', {'class': 'some-icon'}, [])
+
+        expected = '<a class="some-icon" />'
+
+        self.assertEqual(elem.to_html(), expected)
+
     def test_elem_single_attribute(self):
 
         elem = Elem('a', {'class': 'some-icon'}, [Elem('b', {}, [])])
