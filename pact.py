@@ -10,12 +10,16 @@ whitespace = re.compile(r'\s+')
 text = re.compile(r'[^<]+')
 
 
+class Whitespace(object):
+    grammar = attr('value', whitespace)
+
+
 class Text(object):
-    grammar = attr('value', re.compile(r'[^<]+'))
+    grammar = attr('value', re.compile(r'[^<{]+'))
 
     def compose(self, parser, indent=0):
         indent_str = indent * "    "
-        return "{indent}'{value}'\n".format(
+        return "{indent}'{value}'".format(
             indent=indent_str,
             value=self.value
         )
@@ -31,8 +35,12 @@ class String(object):
 class InlineCode(object):
     grammar = '{', attr('code', re.compile(r'[^}]*')), '}'
 
-    def compose(self, parser):
-        return self.code
+    def compose(self, parser, indent=0):
+        indent_str = indent * "    "
+        return "{indent}{code}".format(
+            indent=indent_str,
+            code=self.code
+        )
 
 
 class Attribute(object):
@@ -112,9 +120,8 @@ class EmptyTag(object):
         )
         text.append(self.attributes.compose(parser, followed_by_children=False, indent=indent+1))
         text.append(
-            "{indent}){newline}".format(
+            "{indent})".format(
                 indent=end_indent_str if has_contents else '',
-                newline='\n' if has_contents else '',
             )
         )
 
@@ -135,7 +142,7 @@ class NonEmptyTag(object):
             text, _ = parser.parse(text, '>')
             text, _ = parser.parse(text, maybe_some(whitespace))
             text, children = parser.parse(text, TagChildren)
-            result.children = children[:]
+            result.children = children
             text, _ = parser.parse(text, maybe_some(whitespace))
             text, _ = parser.parse(text, '</')
             text, _ = parser.parse(text, tag.name)
@@ -170,15 +177,10 @@ class NonEmptyTag(object):
         text.append(
             self.attributes.compose(parser, followed_by_children=has_children, indent=indent+1)
         )
-        for entry in self.children:
-            # Skip whitespace for the moment - TODO Probably can't do this all the time
-            if not isinstance(entry, basestring):
-                text.append(entry.compose(parser, indent=indent+1))
+        text.append(self.children.compose(parser, indent=indent+1))
         text.append(
-            "{indent}){comma}{newline}".format(
+            "{indent})".format(
                 indent=end_indent_str if has_contents else '',
-                comma='' if first else ',',
-                newline='\n' if (has_contents or not first) else '',
                 )
             )
 
@@ -186,17 +188,17 @@ class NonEmptyTag(object):
 
 
 class TagChildren(List):
-    grammar = maybe_some([EmptyTag, NonEmptyTag, whitespace, Text])
+    grammar = maybe_some([EmptyTag, NonEmptyTag, Whitespace, Text, InlineCode])
 
     def compose(self, parser, indent=0):
         text = []
         for entry in self:
-            if isinstance(entry, basestring):
-                text.append(entry)
-            else:
+            # Skip pure whitespace
+            if not isinstance(entry, Whitespace):
                 text.append(entry.compose(parser, indent=indent))
+                text.append(',\n')
 
-        return '\n'.join(text)
+        return ''.join(text)
 
 
 class PactBlock(List):

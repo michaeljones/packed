@@ -66,7 +66,6 @@ def tag(self):
         {},
         Elem('i'),
     )
-
 """
 
         result = translate(code)
@@ -98,7 +97,6 @@ def tag(self):
             },
         ),
     )
-
 """
 
         result = translate(code)
@@ -139,7 +137,6 @@ def tag(self):
             },
         ),
     )
-
 """
 
         result = translate(code)
@@ -169,9 +166,8 @@ def tag(self):
             {
                 'class': 'fa fa-twitter-square large-icon',
             },
-        )
+        ),
     )
-
 """
 
         result = translate(code)
@@ -223,9 +219,33 @@ def tag(self):
         {
             'href': twitter_share,
         },
-        'My link text'
+        'My link text',
     )
+"""
 
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
+    def test_value_in_text(self):
+
+        code = """
+@pact
+def tag(self):
+    target = "home"
+    return <a>My link to {target}</a>
+"""
+
+        expected = """
+@pact
+def tag(self):
+    target = "home"
+    return Elem(
+        'a',
+        {},
+        'My link to ',
+        target,
+    )
 """
 
         result = translate(code)
