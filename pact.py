@@ -9,17 +9,6 @@ from pypeg2 import parse, compose, List, name, maybe_some, attr
 whitespace = re.compile(r'\s+')
 
 
-class NonPactLine(List):
-    grammar = re.compile('.*'), '\n'
-
-    def compose(self, parser, attr_of=None):
-        text = []
-        for entry in self:
-            text.append(entry)
-
-        return '\n'.join(text)
-
-
 class String(object):
     grammar = '"', attr('value', re.compile(r'[^"]*')), '"'
 
@@ -185,6 +174,13 @@ class PactBlock(List):
         return ''.join(text)
 
 
+class NonPactLine(List):
+    grammar = attr('content', re.compile('.*')), '\n'
+
+    def compose(self, parser, attr_of=None):
+        return '%s\n' % self.content
+
+
 class File(List):
     grammar = maybe_some([
         PactBlock,
@@ -196,7 +192,7 @@ class File(List):
         for entry in self:
             text.append(entry.compose(parser))
 
-        return '\n'.join(text)
+        return ''.join(text)
 
 
 def translate(code):

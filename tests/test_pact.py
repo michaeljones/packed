@@ -1,4 +1,6 @@
 
+from __future__ import unicode_literals, print_function
+
 from unittest import TestCase
 
 from pact import translate, Elem
@@ -110,6 +112,33 @@ def tag(self):
 
         result = translate(code)
 
+        self.assertMultiLineEqual(expected, result)
+
+    def test_empty_text(self):
+
+        code = ""
+        expected = code
+        result = translate(code)
+        self.assertEqual(expected, result)
+
+    def test_single_empty_line(self):
+
+        code = "\n"
+        expected = code
+        result = translate(code)
+        self.assertEqual(expected, result)
+
+    def test_pure_text(self):
+
+        code = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return "This is a test of text"
+"""
+
+        expected = code
+        result = translate(code)
         self.assertMultiLineEqual(expected, result)
 
 
