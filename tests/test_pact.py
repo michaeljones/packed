@@ -103,6 +103,34 @@ def tag(self):
 
         self.assertMultiLineEqual(expected, result)
 
+    def test_simple_multiple_children(self):
+
+        code = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return <a> <i></i> <b></b> </a>
+"""
+
+        expected = """
+@pact
+def tag(self):
+    twitter_share = ""
+    return Elem(
+        'a',
+        {},
+        ' ',
+        Elem('i'),
+        ' ',
+        Elem('b'),
+        ' ',
+    )
+"""
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
     def test_multiple_children(self):
 
         code = """
@@ -124,18 +152,21 @@ def tag(self):
         {
             'href': twitter_share,
         },
+        ' ',
         Elem(
             'i',
             {
                 'class': 'fa fa-twitter-square large-icon',
             },
         ),
+        ' ',
         Elem(
             'i',
             {
                 'class': 'fa fa-facebook-square large-icon',
             },
         ),
+        ' ',
     )
 """
 

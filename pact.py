@@ -13,6 +13,11 @@ text = re.compile(r'[^<]+')
 class Whitespace(object):
     grammar = attr('value', whitespace)
 
+    def compose(self, parser, indent=0):
+        "Compress all whitespace to a single space (' ')"
+        indent_str = indent * "    "
+        return "{indent}' '".format(indent=indent_str)
+
 
 class Text(object):
     grammar = attr('value', re.compile(r'[^<{]+'))
@@ -140,7 +145,6 @@ class NonEmptyTag(object):
             text, attributes = parser.parse(text, Attributes)
             result.attributes = attributes
             text, _ = parser.parse(text, '>')
-            text, _ = parser.parse(text, maybe_some(whitespace))
             text, children = parser.parse(text, TagChildren)
             result.children = children
             text, _ = parser.parse(text, maybe_some(whitespace))
@@ -194,9 +198,8 @@ class TagChildren(List):
         text = []
         for entry in self:
             # Skip pure whitespace
-            if not isinstance(entry, Whitespace):
-                text.append(entry.compose(parser, indent=indent))
-                text.append(',\n')
+            text.append(entry.compose(parser, indent=indent))
+            text.append(',\n')
 
         return ''.join(text)
 
