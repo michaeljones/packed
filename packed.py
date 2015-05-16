@@ -366,7 +366,7 @@ def main(args):
     for root, dirs, files in os.walk(target_directory):
 
         for filename in files:
-            if filename.endswith('.pkd'):
+            if filename.endswith('.pyx'):
                 py_filename = '{}.py'.format(filename[:-4])
 
                 full_pkd_path = os.path.join(root, filename)

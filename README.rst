@@ -34,12 +34,12 @@ Usage
 
 The module can be called from the command line to find files with the **Packed**
 syntax and convert them to pure Python. Files using the **Packed** syntax
-should use the ``.pkd`` file extension. The command searches recursively through
+should use the ``.pyx`` file extension. The command searches recursively through
 the provided directory::
 
    python -m packed .
 
-Will write pure Python ``.py`` files for all ``.pkd`` files under the current
+Will write pure Python ``.py`` files for all ``.pyx`` files under the current
 directory.
 
 
