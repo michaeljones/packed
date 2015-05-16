@@ -293,6 +293,27 @@ def tag(self):
 
         self.assertMultiLineEqual(expected, result)
 
+    def test_double_attribute(self):
+
+        code = """
+    link = <a href={link.url} rel="nofollow">{link.display}</a>
+    """
+
+        expected = """
+    link = Elem(
+        'a',
+        {
+            'href': link.url,
+            'rel': 'nofollow',
+        },
+        link.display,
+    )
+    """
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
 
 class TestComponentTranslate(TestCase):
 

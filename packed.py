@@ -6,7 +6,7 @@ import re
 import sys
 import os
 
-from pypeg2 import parse, compose, List, name, maybe_some, attr, optional, some, ignore, Symbol
+from pypeg2 import parse, compose, List, name, maybe_some, attr, optional, ignore, Symbol
 
 
 __version__ = '0.1.0'
@@ -68,7 +68,7 @@ class Attribute(object):
 
 
 class Attributes(List):
-    grammar = optional(whitespace, some(Attribute))
+    grammar = optional(ignore(Whitespace), Attribute, maybe_some(ignore(Whitespace), Attribute))
 
     def compose(self, parser, followed_by_children, indent):
         indent_str = indent * "    "
@@ -157,7 +157,7 @@ class NonEmptyTag(object):
             text, _ = parser.parse(text, '>')
             text, children = parser.parse(text, TagChildren)
             result.children = children
-            text, _ = parser.parse(text, maybe_some(whitespace))
+            text, _ = parser.parse(text, optional(whitespace))
             text, _ = parser.parse(text, '</')
             text, _ = parser.parse(text, result.name)
             text, _ = parser.parse(text, '>')
