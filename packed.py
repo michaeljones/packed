@@ -10,7 +10,7 @@ import functools
 from pypeg2 import parse, compose, List, name, maybe_some, attr, optional, ignore, Symbol
 
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 
 whitespace = re.compile(r'\s+')

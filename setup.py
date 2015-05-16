@@ -8,7 +8,7 @@ except ImportError:
 
 setup(
     name='packed',
-    version='0.1.0',
+    version='0.2.0',
     url='https://github.com/michaeljones/packed',
     download_url='https://github.com/michaeljones/packed',
     license='BSD',
