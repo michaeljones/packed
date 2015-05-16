@@ -218,7 +218,7 @@ class TagChildren(List):
         return ''.join(text)
 
 
-class PactBlock(List):
+class PackedBlock(List):
 
     grammar = attr('line_start', re.compile(r'[^<\n]+')), tags
 
@@ -235,7 +235,7 @@ class PactBlock(List):
         return ''.join(text)
 
 
-class NonPactLine(List):
+class NonPackedLine(List):
 
     grammar = attr('content', re.compile('.*')), '\n'
 
@@ -247,7 +247,7 @@ line_without_newline = re.compile(r'.+')
 
 
 class File(List):
-    grammar = maybe_some([PactBlock, NonPactLine, line_without_newline])
+    grammar = maybe_some([PackedBlock, NonPackedLine, line_without_newline])
 
     def compose(self, parser, attr_of=None):
         text = []
