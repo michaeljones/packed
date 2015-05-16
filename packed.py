@@ -89,6 +89,9 @@ class EmptyTag(object):
 
     grammar = '<', name(), attr('attributes', Attributes), ignore(whitespace), '/>'
 
+    def get_name(self):
+        return "'%s'" % self.name
+
     def compose(self, parser, indent=0, first=False):
         text = []
 
@@ -101,10 +104,10 @@ class EmptyTag(object):
         contents_sep = ',\n' if has_contents else ''
 
         text.append(
-            "{indent}Elem({paren_sep}{indent_plus}'{name}'{contents_sep}".format(
+            "{indent}Elem({paren_sep}{indent_plus}{name}{contents_sep}".format(
                 indent=indent_str,
                 indent_plus=indent_plus_str if has_contents else '',
-                name=self.name,
+                name=self.get_name(),
                 paren_sep=paren_sep,
                 contents_sep=contents_sep,
             )
@@ -117,6 +120,24 @@ class EmptyTag(object):
         )
 
         return ''.join(text)
+
+
+class ComponentName(object):
+
+    grammar = attr('first_letter', re.compile(r'[A-Z]')), attr('rest', Symbol)
+
+    def compose(self):
+        return self.first_letter + self.rest
+
+
+class ComponentTag(EmptyTag):
+
+    grammar = (
+        '<', attr('name', ComponentName), attr('attributes', Attributes), ignore(whitespace), '/>'
+    )
+
+    def get_name(self):
+        return self.name.compose()
 
 
 class NonEmptyTag(object):
@@ -177,8 +198,12 @@ class NonEmptyTag(object):
         return ''.join(text)
 
 
+tags = [ComponentTag, NonEmptyTag, EmptyTag]
+
+
 class TagChildren(List):
-    grammar = maybe_some([EmptyTag, NonEmptyTag, Text, InlineCode, Whitespace])
+
+    grammar = maybe_some(tags + [Text, InlineCode, Whitespace])
 
     def compose(self, parser, indent=0):
         text = []
@@ -191,7 +216,8 @@ class TagChildren(List):
 
 
 class PactBlock(List):
-    grammar = re.compile(r'[^<\n]+'), [NonEmptyTag, EmptyTag]
+
+    grammar = re.compile(r'[^<\n]+'), tags
 
     def compose(self, parser, attr_of=None):
         text = []
@@ -205,6 +231,7 @@ class PactBlock(List):
 
 
 class NonPactLine(List):
+
     grammar = attr('content', re.compile('.*')), '\n'
 
     def compose(self, parser, attr_of=None):

@@ -272,3 +272,39 @@ def tag(self):
         result = translate(code)
 
         self.assertMultiLineEqual(expected, result)
+
+
+class TestComponentTranslate(TestCase):
+
+    def test_simple_component(self):
+
+        code = """
+    return <ExampleComponent />
+"""
+
+        expected = """
+    return Elem(ExampleComponent)
+"""
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
+    def test_mixed_children(self):
+
+        code = """
+    return <a><b></b><ExampleComponent /></a>
+"""
+
+        expected = """
+    return Elem(
+        'a',
+        {},
+        Elem('b'),
+        Elem(ExampleComponent),
+    )
+"""
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
