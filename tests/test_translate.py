@@ -8,6 +8,26 @@ from packed import translate
 
 class TestTranslate(TestCase):
 
+    def test_whitespace(self):
+
+        code = """   """
+
+        expected = code
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
+    def test_simple_code(self):
+
+        code = """return True"""
+
+        expected = code
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
     def test_simple_element(self):
 
         code = """

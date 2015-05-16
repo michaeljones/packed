@@ -241,16 +241,18 @@ class NonPactLine(List):
         return '%s\n' % self.content
 
 
+line_without_newline = re.compile(r'.+')
+
 class File(List):
-    grammar = maybe_some([
-        PactBlock,
-        NonPactLine,
-    ])
+    grammar = maybe_some([PactBlock, NonPactLine, line_without_newline])
 
     def compose(self, parser, attr_of=None):
         text = []
         for entry in self:
-            text.append(entry.compose(parser))
+            if isinstance(entry, basestring):
+                text.append(entry)
+            else:
+                text.append(entry.compose(parser))
 
         return ''.join(text)
 
