@@ -2,6 +2,9 @@
 Packed
 ======
 
+.. image:: https://travis-ci.org/michaeljones/packed.svg?branch=master
+    :target: https://travis-ci.org/michaeljones/packed
+
 Packed provides `JSX <https://facebook.github.io/jsx/>`__-style syntax within
 Python files. It provides a system for converting::
 
