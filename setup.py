@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 try:
-    from setuptools import setup, find_packages
+    from setuptools import setup
 except ImportError:
     import distribute_setup
     distribute_setup.use_setuptools()
-    from setuptools import setup, find_packages
-
-import packed
+    from setuptools import setup
 
 setup(
     name='packed',
-    version=packed.__version__,
+    version='0.1.0',
     url='https://github.com/michaeljones/packed',
     download_url='https://github.com/michaeljones/packed',
     license='BSD',
@@ -32,7 +30,7 @@ setup(
         'Topic :: Software Development :: Pre-processors',
     ],
     platforms='any',
-    packages=find_packages(),
+    py_modules=['packed'],
     include_package_data=True,
     install_requires=open('requirements.txt', 'r').read(),
 )
