@@ -260,11 +260,6 @@ class File(List):
         return ''.join(text)
 
 
-def translate(code):
-    result = parse(code, File, whitespace=None)
-    return compose(result)
-
-
 def format_attribute(key, value):
     return '{name}="{value}"'.format(name=key, value=value)
 
@@ -331,6 +326,11 @@ class Component(object):
 
     def render(self):
         raise NotImplementedError
+
+
+def translate(code):
+    result = parse(code, File, whitespace=None)
+    return compose(result)
 
 
 def translate_file(pkd_path, py_path):
