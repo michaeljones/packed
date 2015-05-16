@@ -34,5 +34,5 @@ setup(
     platforms='any',
     packages=find_packages(),
     include_package_data=True,
-    install_requires=['pypeg2'],
+    install_requires=open('requirements.txt', 'r').read(),
 )
