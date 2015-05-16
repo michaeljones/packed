@@ -312,3 +312,15 @@ class Elem(object):
                 name=self.name,
                 attributes=attribute_text
             )
+
+
+class Component(object):
+    """Simple component base class that exposes all incoming attributes in a self.props dictionary a
+    little like the React components' this.props attribute.
+    """
+
+    def __init__(self, **props):
+        self.props = props
+
+    def render(self):
+        raise NotImplementedError

@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function
 
 from unittest import TestCase
 
-from packed import Elem
+from packed import Elem, Component
 
 
 class TestComponent(TestCase):
@@ -31,5 +31,18 @@ class TestComponent(TestCase):
         elem = Elem(MyComponent)
 
         expected = 'Just some text'
+
+        self.assertEqual(elem.to_html(), expected)
+
+    def test_props(self):
+
+        class MyComponent(Component):
+
+            def render(self):
+                return 'My test property value: %s' % self.props['test']
+
+        elem = Elem(MyComponent, {'test': 'test_value'})
+
+        expected = 'My test property value: test_value'
 
         self.assertEqual(elem.to_html(), expected)
