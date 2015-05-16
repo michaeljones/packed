@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function
 
 from unittest import TestCase
 
-from pact import Elem
+from packed import Elem
 
 
 class TestElem(TestCase):
