@@ -8,6 +8,26 @@ from packed import translate
 
 class TestTranslate(TestCase):
 
+    def test_whitespace(self):
+
+        code = """   """
+
+        expected = code
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
+    def test_simple_code(self):
+
+        code = """return True"""
+
+        expected = code
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
     def test_simple_element(self):
 
         code = """
@@ -268,6 +288,49 @@ def tag(self):
         anotherTarget,
     )
 """
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
+    def test_double_attribute(self):
+
+        code = """
+    link = <a href={link.url} rel="nofollow">{link.display}</a>
+    """
+
+        expected = """
+    link = Elem(
+        'a',
+        {
+            'href': link.url,
+            'rel': 'nofollow',
+        },
+        link.display,
+    )
+    """
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
+    def test_indentation(self):
+        """Make sure we're attempting to pick up the indentation from the code we're reading"""
+
+        code = """
+            link = <a href={link.url} rel="nofollow">{link.display}</a>
+            """
+
+        expected = """
+            link = Elem(
+                'a',
+                {
+                    'href': link.url,
+                    'rel': 'nofollow',
+                },
+                link.display,
+            )
+            """
 
         result = translate(code)
 

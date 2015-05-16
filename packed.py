@@ -5,8 +5,9 @@ import inspect
 import re
 import sys
 import os
+import functools
 
-from pypeg2 import parse, compose, List, name, maybe_some, attr, optional, some, ignore, Symbol
+from pypeg2 import parse, compose, List, name, maybe_some, attr, optional, ignore, Symbol
 
 
 __version__ = '0.1.0'
@@ -68,7 +69,7 @@ class Attribute(object):
 
 
 class Attributes(List):
-    grammar = optional(whitespace, some(Attribute))
+    grammar = optional(ignore(Whitespace), Attribute, maybe_some(ignore(Whitespace), Attribute))
 
     def compose(self, parser, followed_by_children, indent):
         indent_str = indent * "    "
@@ -157,7 +158,7 @@ class NonEmptyTag(object):
             text, _ = parser.parse(text, '>')
             text, children = parser.parse(text, TagChildren)
             result.children = children
-            text, _ = parser.parse(text, maybe_some(whitespace))
+            text, _ = parser.parse(text, optional(whitespace))
             text, _ = parser.parse(text, '</')
             text, _ = parser.parse(text, result.name)
             text, _ = parser.parse(text, '>')
@@ -218,22 +219,24 @@ class TagChildren(List):
         return ''.join(text)
 
 
-class PactBlock(List):
+class PackedBlock(List):
 
-    grammar = re.compile(r'[^<\n]+'), tags
+    grammar = attr('line_start', re.compile(r'[^<\n]+')), tags
 
     def compose(self, parser, attr_of=None):
-        text = []
+        text = [self.line_start]
+        indent_text = re.match(r' *', self.line_start).group(0)
+        indent = len(indent_text) / 4
         for entry in self:
             if isinstance(entry, basestring):
                 text.append(entry)
             else:
-                text.append(entry.compose(parser, indent=1, first=True))
+                text.append(entry.compose(parser, indent=indent, first=True))
 
         return ''.join(text)
 
 
-class NonPactLine(List):
+class NonPackedLine(List):
 
     grammar = attr('content', re.compile('.*')), '\n'
 
@@ -241,23 +244,21 @@ class NonPactLine(List):
         return '%s\n' % self.content
 
 
+line_without_newline = re.compile(r'.+')
+
+
 class File(List):
-    grammar = maybe_some([
-        PactBlock,
-        NonPactLine,
-    ])
+    grammar = maybe_some([PackedBlock, NonPackedLine, line_without_newline])
 
     def compose(self, parser, attr_of=None):
         text = []
         for entry in self:
-            text.append(entry.compose(parser))
+            if isinstance(entry, basestring):
+                text.append(entry)
+            else:
+                text.append(entry.compose(parser))
 
         return ''.join(text)
-
-
-def translate(code):
-    result = parse(code, File, whitespace=None)
-    return compose(result)
 
 
 def format_attribute(key, value):
@@ -265,6 +266,9 @@ def format_attribute(key, value):
 
 
 def to_html(entity):
+
+    if isinstance(entity, list):
+        return ''.join(map(lambda e: to_html(e), entity))
 
     if hasattr(entity, 'to_html'):
         return entity.to_html()
@@ -302,18 +306,14 @@ class Elem(object):
         if attribute_text:
             attribute_text = ' ' + attribute_text
 
+        children_text = ''
         if self.children:
             children_text = ''.join(map(lambda c: to_html(c), self.children))
-            return "<{name}{attributes}>{children}</{name}>".format(
-                name=self.name,
-                attributes=attribute_text,
-                children=children_text
-            )
-        else:
-            return "<{name}{attributes} />".format(
-                name=self.name,
-                attributes=attribute_text
-            )
+        return "<{name}{attributes}>{children}</{name}>".format(
+            name=self.name,
+            attributes=attribute_text,
+            children=children_text
+        )
 
 
 class Component(object):
@@ -326,6 +326,24 @@ class Component(object):
 
     def render(self):
         raise NotImplementedError
+
+
+def packed(func):
+    """Decorator function to apply to functions that need to return rendered html text but look
+    better just returning Elem objects
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        text = to_html(result)
+        return text
+    return wrapper
+
+
+def translate(code):
+    result = parse(code, File, whitespace=None)
+    return compose(result)
 
 
 def translate_file(pkd_path, py_path):
