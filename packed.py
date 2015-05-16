@@ -23,12 +23,13 @@ class Whitespace(object):
 
 
 class Text(object):
-    grammar = attr('value', re.compile(r'[^<{]+'))
+    grammar = attr('whitespace', optional(whitespace)), attr('value', re.compile(r'[^<{]+'))
 
     def compose(self, parser, indent=0):
         indent_str = indent * "    "
-        return "{indent}'{value}'".format(
+        return "{indent}'{whitespace}{value}'".format(
             indent=indent_str,
+            whitespace=self.whitespace or '',
             value=self.value
         )
 
@@ -195,7 +196,7 @@ class NonEmptyTag(object):
 
 
 class TagChildren(List):
-    grammar = maybe_some([EmptyTag, NonEmptyTag, Whitespace, Text, InlineCode])
+    grammar = maybe_some([EmptyTag, NonEmptyTag, Text, InlineCode, Whitespace])
 
     def compose(self, parser, indent=0):
         text = []

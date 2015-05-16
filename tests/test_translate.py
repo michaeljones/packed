@@ -235,16 +235,10 @@ def tag(self):
     def test_text_in_tag(self):
 
         code = """
-@pact
-def tag(self):
-    twitter_share = ""
     return <a href={twitter_share}>My link text</a>
 """
 
         expected = """
-@pact
-def tag(self):
-    twitter_share = ""
     return Elem(
         'a',
         {
@@ -261,21 +255,17 @@ def tag(self):
     def test_value_in_text(self):
 
         code = """
-@pact
-def tag(self):
-    target = "home"
-    return <a>My link to {target}</a>
+    return <p>My paragraph with {target} and {anotherTarget}</p>
 """
 
         expected = """
-@pact
-def tag(self):
-    target = "home"
     return Elem(
-        'a',
+        'p',
         {},
-        'My link to ',
+        'My paragraph with ',
         target,
+        ' and ',
+        anotherTarget,
     )
 """
 
