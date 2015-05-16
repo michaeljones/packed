@@ -267,6 +267,9 @@ def format_attribute(key, value):
 
 def to_html(entity):
 
+    if isinstance(entity, list):
+        return ''.join(map(lambda e: to_html(e), entity))
+
     if hasattr(entity, 'to_html'):
         return entity.to_html()
     else:
