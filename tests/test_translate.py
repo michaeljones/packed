@@ -28,6 +28,23 @@ class TestTranslate(TestCase):
 
         self.assertMultiLineEqual(expected, result)
 
+    def test_comment(self):
+
+        code = """
+        # This is a comment
+        # This is commented out 'packed' syntax:
+        # <a attr="value"></a>
+
+        # This is commented out 'packed' syntax after valid code
+        return True # <a attr="value"></a>
+        """
+
+        expected = code
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
     def test_simple_element(self):
 
         code = """

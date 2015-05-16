@@ -221,7 +221,7 @@ class TagChildren(List):
 
 class PackedBlock(List):
 
-    grammar = attr('line_start', re.compile(r'[^<\n]+')), tags
+    grammar = attr('line_start', re.compile(r'[^#<\n]+')), tags
 
     def compose(self, parser, attr_of=None):
         text = [self.line_start]
