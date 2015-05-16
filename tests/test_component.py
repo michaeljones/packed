@@ -17,7 +17,7 @@ class TestComponent(TestCase):
 
         elem = Elem(MyComponent)
 
-        expected = "<a />"
+        expected = "<a></a>"
 
         self.assertEqual(elem.to_html(), expected)
 

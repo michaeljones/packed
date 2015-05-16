@@ -12,7 +12,7 @@ class TestElem(TestCase):
 
         elem = Elem('a')
 
-        expected = "<a />"
+        expected = "<a></a>"
 
         self.assertEqual(elem.to_html(), expected)
 
@@ -20,7 +20,7 @@ class TestElem(TestCase):
 
         elem = Elem('a', {}, Elem('b', {}))
 
-        expected = "<a><b /></a>"
+        expected = "<a><b></b></a>"
 
         self.assertEqual(elem.to_html(), expected)
 
@@ -28,7 +28,7 @@ class TestElem(TestCase):
 
         elem = Elem('a', {'class': 'some-icon'})
 
-        expected = '<a class="some-icon" />'
+        expected = '<a class="some-icon"></a>'
 
         self.assertEqual(elem.to_html(), expected)
 
@@ -36,7 +36,7 @@ class TestElem(TestCase):
 
         elem = Elem('a', {'class': 'some-icon'}, Elem('b', {}))
 
-        expected = '<a class="some-icon"><b /></a>'
+        expected = '<a class="some-icon"><b></b></a>'
 
         self.assertEqual(elem.to_html(), expected)
 
@@ -44,7 +44,7 @@ class TestElem(TestCase):
 
         elem = Elem('a', {'class': 'some-icon', 'data-width': 800}, Elem('b', {}))
 
-        expected = '<a data-width="800" class="some-icon"><b /></a>'
+        expected = '<a data-width="800" class="some-icon"><b></b></a>'
 
         self.assertEqual(elem.to_html(), expected)
 
