@@ -1,6 +1,7 @@
 
 from __future__ import unicode_literals, print_function
 
+import inspect
 import re
 
 from pypeg2 import parse, compose, List, name, maybe_some, attr, optional, some, ignore, Symbol
@@ -279,6 +280,15 @@ class Elem(object):
         self.children = children
 
     def to_html(self):
+
+        # Handle components by instanciating them and calling their render method
+        if inspect.isclass(self.name):
+            assert not self.children
+            instance = self.name(**self.attributes)
+
+            output = instance.render()
+
+            return to_html(output)
 
         attribute_text = ' '.join(
             map(
