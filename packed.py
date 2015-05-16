@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function
 
 import re
 
-from pypeg2 import parse, compose, List, name, maybe_some, attr, optional, some
+from pypeg2 import parse, compose, List, name, maybe_some, attr, optional, some, ignore, Symbol
 
 
 __version__ = '0.1.0'
@@ -85,27 +85,9 @@ class Attributes(List):
         return ''.join(text)
 
 
-class TagName(object):
-    grammar = name()
-
-
 class EmptyTag(object):
 
-    @staticmethod
-    def parse(parser, text, pos):
-        result = EmptyTag()
-        try:
-            text, _ = parser.parse(text, '<')
-            text, tag = parser.parse(text, TagName)
-            result.name = tag.name
-            text, attributes = parser.parse(text, Attributes)
-            result.attributes = attributes
-            text, _ = parser.parse(text, whitespace)
-            text, _ = parser.parse(text, '/>')
-        except SyntaxError, e:
-            return text, e
-
-        return text, result
+    grammar = '<', name(), attr('attributes', Attributes), ignore(whitespace), '/>'
 
     def compose(self, parser, indent=0, first=False):
         text = []
@@ -144,8 +126,8 @@ class NonEmptyTag(object):
         result = NonEmptyTag()
         try:
             text, _ = parser.parse(text, '<')
-            text, tag = parser.parse(text, TagName)
-            result.name = tag.name
+            text, tag = parser.parse(text, Symbol)
+            result.name = tag
             text, attributes = parser.parse(text, Attributes)
             result.attributes = attributes
             text, _ = parser.parse(text, '>')
@@ -153,7 +135,7 @@ class NonEmptyTag(object):
             result.children = children
             text, _ = parser.parse(text, maybe_some(whitespace))
             text, _ = parser.parse(text, '</')
-            text, _ = parser.parse(text, tag.name)
+            text, _ = parser.parse(text, result.name)
             text, _ = parser.parse(text, '>')
         except SyntaxError, e:
             return text, e
