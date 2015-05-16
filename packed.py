@@ -3,6 +3,8 @@ from __future__ import unicode_literals, print_function
 
 import inspect
 import re
+import sys
+import os
 
 from pypeg2 import parse, compose, List, name, maybe_some, attr, optional, some, ignore, Symbol
 
@@ -324,3 +326,38 @@ class Component(object):
 
     def render(self):
         raise NotImplementedError
+
+
+def translate_file(pkd_path, py_path):
+
+    pkd_contents = open(pkd_path, 'r').read()
+
+    try:
+        py_contents = translate(pkd_contents)
+    except SyntaxError:
+        sys.stderr.write('Failed to convert: %s' % pkd_path)
+        return
+
+    open(py_path, 'w').write(py_contents)
+
+
+def main(args):
+
+    target_directory = args[0]
+
+    for root, dirs, files in os.walk(target_directory):
+
+        for filename in files:
+            if filename.endswith('.pkd'):
+                py_filename = '{}.py'.format(filename[:-4])
+
+                full_pkd_path = os.path.join(root, filename)
+                full_py_path = os.path.join(root, py_filename)
+
+                translate_file(full_pkd_path, full_py_path)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
