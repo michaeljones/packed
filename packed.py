@@ -306,18 +306,14 @@ class Elem(object):
         if attribute_text:
             attribute_text = ' ' + attribute_text
 
+        children_text = ''
         if self.children:
             children_text = ''.join(map(lambda c: to_html(c), self.children))
-            return "<{name}{attributes}>{children}</{name}>".format(
-                name=self.name,
-                attributes=attribute_text,
-                children=children_text
-            )
-        else:
-            return "<{name}{attributes} />".format(
-                name=self.name,
-                attributes=attribute_text
-            )
+        return "<{name}{attributes}>{children}</{name}>".format(
+            name=self.name,
+            attributes=attribute_text,
+            children=children_text
+        )
 
 
 class Component(object):
