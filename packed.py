@@ -5,6 +5,7 @@ import inspect
 import re
 import sys
 import os
+import functools
 
 from pypeg2 import parse, compose, List, name, maybe_some, attr, optional, ignore, Symbol
 
@@ -326,6 +327,19 @@ class Component(object):
 
     def render(self):
         raise NotImplementedError
+
+
+def packed(func):
+    """Decorator function to apply to functions that need to return rendered html text but look
+    better just returning Elem objects
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        text = to_html(result)
+        return text
+    return wrapper
 
 
 def translate(code):
