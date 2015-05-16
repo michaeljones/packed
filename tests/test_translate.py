@@ -11,14 +11,14 @@ class TestTranslate(TestCase):
     def test_simple_element(self):
 
         code = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return <a></a>
 """
 
         expected = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return Elem('a')
@@ -31,14 +31,14 @@ def tag(self):
     def test_empty_element(self):
 
         code = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return <a />
 """
 
         expected = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return Elem('a')
@@ -51,14 +51,14 @@ def tag(self):
     def test_single_child_no_attributes(self):
 
         code = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return <a><i></i></a>
 """
 
         expected = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return Elem(
@@ -75,14 +75,14 @@ def tag(self):
     def test_single_child(self):
 
         code = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return <a href={twitter_share}><i class="fa fa-twitter-square large-icon"></i></a>
 """
 
         expected = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return Elem(
@@ -106,14 +106,14 @@ def tag(self):
     def test_simple_multiple_children(self):
 
         code = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return <a> <i></i> <b></b> </a>
 """
 
         expected = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return Elem(
@@ -134,7 +134,7 @@ def tag(self):
     def test_multiple_children(self):
 
         code = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return <a href={twitter_share}>
@@ -144,7 +144,7 @@ def tag(self):
 """
 
         expected = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return Elem(
@@ -177,14 +177,14 @@ def tag(self):
     def test_empty_tag_translate(self):
 
         code = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return <a href={twitter_share}><i class="fa fa-twitter-square large-icon" /></a>
 """
 
         expected = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return Elem(
@@ -222,7 +222,7 @@ def tag(self):
     def test_pure_text(self):
 
         code = """
-@pact
+@packed
 def tag(self):
     twitter_share = ""
     return "This is a test of text"
