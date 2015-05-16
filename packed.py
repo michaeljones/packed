@@ -220,15 +220,17 @@ class TagChildren(List):
 
 class PactBlock(List):
 
-    grammar = re.compile(r'[^<\n]+'), tags
+    grammar = attr('line_start', re.compile(r'[^<\n]+')), tags
 
     def compose(self, parser, attr_of=None):
-        text = []
+        text = [self.line_start]
+        indent_text = re.match(r' *', self.line_start).group(0)
+        indent = len(indent_text) / 4
         for entry in self:
             if isinstance(entry, basestring):
                 text.append(entry)
             else:
-                text.append(entry.compose(parser, indent=1, first=True))
+                text.append(entry.compose(parser, indent=indent, first=True))
 
         return ''.join(text)
 
@@ -242,6 +244,7 @@ class NonPactLine(List):
 
 
 line_without_newline = re.compile(r'.+')
+
 
 class File(List):
     grammar = maybe_some([PactBlock, NonPactLine, line_without_newline])

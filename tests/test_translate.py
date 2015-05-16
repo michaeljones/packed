@@ -314,6 +314,28 @@ def tag(self):
 
         self.assertMultiLineEqual(expected, result)
 
+    def test_indentation(self):
+        """Make sure we're attempting to pick up the indentation from the code we're reading"""
+
+        code = """
+            link = <a href={link.url} rel="nofollow">{link.display}</a>
+            """
+
+        expected = """
+            link = Elem(
+                'a',
+                {
+                    'href': link.url,
+                    'rel': 'nofollow',
+                },
+                link.display,
+            )
+            """
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
 
 class TestComponentTranslate(TestCase):
 
