@@ -268,7 +268,7 @@ def format_attribute(key, value):
 def to_html(entity):
 
     if isinstance(entity, list):
-        return ''.join(map(lambda e: to_html(e), entity))
+        return ''.join(map(to_html, entity))
 
     if hasattr(entity, 'to_html'):
         return entity.to_html()
@@ -308,7 +308,7 @@ class Elem(object):
 
         children_text = ''
         if self.children:
-            children_text = ''.join(map(lambda c: to_html(c), self.children))
+            children_text = ''.join(map(to_html, self.children))
         return "<{name}{attributes}>{children}</{name}>".format(
             name=self.name,
             attributes=attribute_text,
