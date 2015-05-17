@@ -370,6 +370,20 @@ class TestComponentTranslate(TestCase):
 
         self.assertMultiLineEqual(expected, result)
 
+    def test_single_character_name_component(self):
+
+        code = """
+    return <E />
+"""
+
+        expected = """
+    return Elem(E)
+"""
+
+        result = translate(code)
+
+        self.assertMultiLineEqual(expected, result)
+
     def test_mixed_children(self):
 
         code = """
