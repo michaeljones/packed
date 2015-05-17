@@ -128,10 +128,10 @@ class EmptyTag(object):
 
 class ComponentName(object):
 
-    grammar = attr('first_letter', re.compile(r'[A-Z]')), attr('rest', Symbol)
+    grammar = attr('first_letter', re.compile(r'[A-Z]')), attr('rest', optional(Symbol))
 
     def compose(self):
-        return self.first_letter + self.rest
+        return self.first_letter + (self.rest if self.rest else '')
 
 
 class ComponentTag(EmptyTag):
