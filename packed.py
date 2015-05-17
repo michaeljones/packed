@@ -18,6 +18,8 @@ text = re.compile(r'[^<]+')
 
 
 class Whitespace(object):
+    """Matches one or more whitespace characters"""
+
     grammar = attr('value', whitespace)
 
     def compose(self, parser, indent=0):
@@ -27,6 +29,8 @@ class Whitespace(object):
 
 
 class Text(object):
+    """Matches text between tags and/or inline code sections."""
+
     grammar = attr('whitespace', optional(whitespace)), attr('value', re.compile(r'[^<{]+'))
 
     def compose(self, parser, indent=0):
@@ -39,6 +43,8 @@ class Text(object):
 
 
 class String(object):
+    """Matches a double-quote delimited string."""
+
     grammar = '"', attr('value', re.compile(r'[^"]*')), '"'
 
     def compose(self, parser):
@@ -46,6 +52,8 @@ class String(object):
 
 
 class InlineCode(object):
+    """Matches arbitrary Python code within a curly braces."""
+
     grammar = '{', attr('code', re.compile(r'[^}]*')), '}'
 
     def compose(self, parser, indent=0):
@@ -57,6 +65,10 @@ class InlineCode(object):
 
 
 class Attribute(object):
+    """Matches an attribute formatted as either: key="value" or key={value} to handle strings and
+    inline code in a similar style to JSX.
+    """
+
     grammar = name(), '=', attr('value', [String, InlineCode])
 
     def compose(self, parser, indent=0):
@@ -69,6 +81,8 @@ class Attribute(object):
 
 
 class Attributes(List):
+    """Matches zero or more attributes"""
+
     grammar = optional(ignore(Whitespace), Attribute, maybe_some(ignore(Whitespace), Attribute))
 
     def compose(self, parser, followed_by_children, indent):
@@ -89,7 +103,8 @@ class Attributes(List):
         return ''.join(text)
 
 
-class EmptyTag(object):
+class SelfClosingTag(object):
+    """Matches a self-closing tag and all of its attributes."""
 
     grammar = '<', name(), attr('attributes', Attributes), ignore(whitespace), '/>'
 
@@ -127,6 +142,12 @@ class EmptyTag(object):
 
 
 class ComponentName(object):
+    """A standard name or symbol beginning with an uppercase letter.
+
+    There are language implications of relying on an upper case letter. It seems reasonable to
+    support another syntax for indicating a component at some point. Perhaps an '!' mark at the
+    start of the name or something similar.
+    """
 
     grammar = attr('first_letter', re.compile(r'[A-Z]')), attr('rest', optional(Symbol))
 
@@ -134,7 +155,10 @@ class ComponentName(object):
         return self.first_letter + (self.rest if self.rest else '')
 
 
-class ComponentTag(EmptyTag):
+class ComponentTag(SelfClosingTag):
+    """Matches a self closing tag with a name that starts with an uppercase letter. These tags are
+    treating as components and their names are assumed to be Python classes rather than strings.
+    """
 
     grammar = (
         '<', attr('name', ComponentName), attr('attributes', Attributes), ignore(whitespace), '/>'
@@ -144,11 +168,13 @@ class ComponentTag(EmptyTag):
         return self.name.compose()
 
 
-class NonEmptyTag(object):
+class PairedTag(object):
+    """Matches an open/close tag pair and all of its attributes and children.
+    """
 
     @staticmethod
     def parse(parser, text, pos):
-        result = NonEmptyTag()
+        result = PairedTag()
         try:
             text, _ = parser.parse(text, '<')
             text, tag = parser.parse(text, Symbol)
@@ -202,10 +228,12 @@ class NonEmptyTag(object):
         return ''.join(text)
 
 
-tags = [ComponentTag, NonEmptyTag, EmptyTag]
+tags = [ComponentTag, PairedTag, SelfClosingTag]
 
 
 class TagChildren(List):
+    """Matches valid tag children which can be other tags, plain text, {values} or a mix of all
+    three."""
 
     grammar = maybe_some(tags + [Text, InlineCode, Whitespace])
 
@@ -220,6 +248,7 @@ class TagChildren(List):
 
 
 class PackedBlock(List):
+    """Matches multi-line block of Packed syntax where the syntax starts on the first line"""
 
     grammar = attr('line_start', re.compile(r'[^#<\n]+')), tags
 
@@ -237,6 +266,8 @@ class PackedBlock(List):
 
 
 class NonPackedLine(List):
+    """Tried after establishing that a line doesn't match the Packed syntax so this can really just
+    match everything else as long as there is a new line so we don't match multiple lines."""
 
     grammar = attr('content', re.compile('.*')), '\n'
 
@@ -247,7 +278,18 @@ class NonPackedLine(List):
 line_without_newline = re.compile(r'.+')
 
 
-class File(List):
+class CodeBlock(List):
+    """Top level grammar representing a block of code, some of which will be Packed syntax and some
+    won't.
+
+    Ideally we would parse the entire Python file with an understanding of all the syntax and an
+    understanding of where it is valid to have Packed syntax however for the moment we just parse is
+    as a block of non-packed-syntax-lines and packed blocks. ie, individual lines with no packed
+    syntax and multi-line blocks with have packed syntax.
+    """
+
+    # line_without_newline accounts for the last line in the code sample which might have content
+    # but no new line at the end
     grammar = maybe_some([PackedBlock, NonPackedLine, line_without_newline])
 
     def compose(self, parser, attr_of=None):
@@ -262,10 +304,13 @@ class File(List):
 
 
 def format_attribute(key, value):
+    """Handles the output format for an attribute to the final html"""
     return '{name}="{value}"'.format(name=key, value=value)
 
 
 def to_html(entity):
+    """Converts entity to output html with the ability to handle Elem instances & unicode and lists
+    of either."""
 
     if isinstance(entity, list):
         return ''.join(map(to_html, entity))
@@ -278,6 +323,11 @@ def to_html(entity):
 
 
 class Elem(object):
+    """Represents an HTML element. Packed translates the <a></a> into Elem('a') with an optional
+    dictionary argument for attributes and further arguments being children.
+
+    Provides a to_html method for recursively outputting the final html.
+    """
 
     def __init__(self, name, attributes=None, *children):
 
@@ -342,18 +392,21 @@ def packed(func):
 
 
 def translate(code):
-    result = parse(code, File, whitespace=None)
+    """Translate a single multi-line block of code from Packed syntax to valid Python."""
+    result = parse(code, CodeBlock, whitespace=None)
     return compose(result)
 
 
-def translate_file(pkd_path, py_path):
+def translate_file(pyx_file, py_path):
+    """Reads & translates the provided .pyx file and writes the result to the provided .py file
+    path."""
 
-    pkd_contents = open(pkd_path, 'r').read()
+    pkd_contents = open(pyx_file, 'r').read()
 
     try:
         py_contents = translate(pkd_contents)
     except SyntaxError:
-        sys.stderr.write('Failed to convert: %s' % pkd_path)
+        sys.stderr.write('Failed to convert: %s' % pyx_file)
         return
 
     open(py_path, 'w').write(py_contents)
