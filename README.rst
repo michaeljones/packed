@@ -75,7 +75,7 @@ For example::
    @packed
    def tag(self):
        share = get_share_link()
-       return <Share link={share} />
+       return <ShareLink link={share} />
 
 The ``Component`` base class exposes attributes passed in the HTML syntax as
 entries in the ``props`` dictionary in a similar style to React.
